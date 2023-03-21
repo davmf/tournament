@@ -1,12 +1,13 @@
 use std::fmt;
+use std::collections::HashMap;
 
 pub fn tally(match_results: &str) -> String {
-    let teams = vec![
-        Team::new("Allegoric Alaskans"),
-        Team::new("Blithering Badgers"),
-        Team::new("Courageous Californians"),
-        Team::new("Devastating Donkeys"),
-    ];
+    let mut teams = HashMap::from([
+        ("Allegoric Alaskans"),
+        ("Blithering Badgers"),
+        ("Courageous Californians"),
+        ("Devastating Donkeys"),
+    ]);
 
     let mut table = vec![];
     table.push("Team                           | MP |  W |  D |  L |  P");
@@ -15,6 +16,7 @@ pub fn tally(match_results: &str) -> String {
         let tokens: Vec<&str> = result_line.split(";").collect();
         let (team1, team2, result) = (tokens[0], tokens[1], tokens[2]);
 
+        match result
     }
 
     "".to_string()
