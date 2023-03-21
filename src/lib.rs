@@ -8,10 +8,13 @@ pub fn tally(match_results: &str) -> String {
         Team::new("Devastating Donkeys"),
     ];
 
-    let header = "Team                           | MP |  W |  D |  L |  P";
+    let mut table = vec![];
+    table.push("Team                           | MP |  W |  D |  L |  P");
 
     for result_line in match_results.lines() {
-        let (team1, team2, result) = result_line.split(";");
+        let tokens: Vec<&str> = result_line.split(";").collect();
+        let (team1, team2, result) = (tokens[0], tokens[1], tokens[2]);
+
     }
 
     "".to_string()
