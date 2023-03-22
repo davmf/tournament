@@ -2,12 +2,19 @@ use std::fmt;
 use std::collections::HashMap;
 
 pub fn tally(match_results: &str) -> String {
-    let mut teams = HashMap::from([
-        ("Allegoric Alaskans"),
-        ("Blithering Badgers"),
-        ("Courageous Californians"),
-        ("Devastating Donkeys"),
-    ]);
+
+    let team_names = vec![
+        "Allegoric Alaskans",
+        "Blithering Badgers",
+        "Courageous Californians",
+        "Devastating Donkeys",      
+    ];
+
+    let mut teams = HashMap::new();
+
+    for team_name in team_names {
+        teams.insert(team_name, Team::new(team_name));
+    }
 
     let mut table = vec![];
     table.push("Team                           | MP |  W |  D |  L |  P");
@@ -16,9 +23,22 @@ pub fn tally(match_results: &str) -> String {
         let tokens: Vec<&str> = result_line.split(";").collect();
         let (team1, team2, result) = (tokens[0], tokens[1], tokens[2]);
 
-        match result
+        match result {
+            "win" => {
+                teams[team1].add_win();
+                teams[team2].add_loss();
+            },
+            "loss" => {
+                teams[team1].add_loss();
+                teams[team2].add_win();
+            },
+            "draw" => {
+                teams[team1].add_draw();
+                teams[team2].add_draw();
+            },
+            &_ => (),
+        }
     }
-
     "".to_string()
 }
 
@@ -45,6 +65,23 @@ impl Team {
 
     fn points(&self) -> u32 {
         self.won * 3 + self.drawn
+    }
+
+    fn add_win(&mut self) {
+        self.played += 1;
+        self.won += 1;
+        self.points += 3;
+    }
+
+    fn add_draw(&mut self) {
+        self.played += 1;
+        self.drawn += 1;
+        self.points += 1;
+    }
+
+    fn add_loss(&mut self) {
+        self.played += 1;
+        self.lost += 1;
     }
 }
 
