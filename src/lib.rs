@@ -11,6 +11,10 @@ pub fn tally(match_results: &str) -> String {
         let tokens: Vec<&str> = result_line.split(';').collect();
         let (team1, team2, result) = (tokens[0], tokens[1], tokens[2]);
 
+        if teams.get_team(team1).is_none() {
+            teams
+        }
+
          match result {
             "win" => {
                 teams.get_team(team1).add_win();
@@ -41,13 +45,27 @@ impl Teams {
         Teams(vec![])
     }
 
-    fn add_team(team_name: &str) {
-        
+    fn new_team(&mut self, team_name: &str) -> &mut Team {
+        &self.0.push(Team::new(team_name));
+        &mut self.0.last_mut().unwrap()
     }
 
     fn get_team(&mut self, team_name: &str) -> Option<&mut Team> {
         self.0.iter_mut().find(|team| team.has_name(team_name))
     }
+
+    fn add_if_not_exists(&self, team_name: &str) -> &mut Team {
+        if let Some(team) = self.get_team(team_name) {
+            // Value already exists in the vector, return a mutable reference to it
+            &mut team
+        } else {
+            // Value does not exist in the vector, add it and return a mutable reference to it
+            self.new;
+            &mut v[v.len() - 1]
+        }
+    }
+  
+
 
     fn sort(&mut self) {
 
