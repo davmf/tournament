@@ -25,16 +25,16 @@ pub fn tally(match_results: &str) -> String {
 
         match result {
             "win" => {
-                teams[team1].add_win();
-                teams[team2].add_loss();
+                teams.get_mut(team1).map(|val| val.add_win());
+                teams.get_mut(team2).map(|val| val.add_loss());
             },
             "loss" => {
-                teams[team1].add_loss();
-                teams[team2].add_win();
+                teams.get_mut(team1).map(|val| val.add_loss());
+                teams.get_mut(team2).map(|val| val.add_win());
             },
             "draw" => {
-                teams[team1].add_draw();
-                teams[team2].add_draw();
+                teams.get_mut(team1).map(|val| val.add_draw());
+                teams.get_mut(team2).map(|val| val.add_draw());
             },
             &_ => (),
         }
