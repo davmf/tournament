@@ -3,16 +3,7 @@ use std::iter;
 
 pub fn tally(match_results: &str) -> String {
 
-    let team_names = vec![
-        "Allegoric Alaskans",
-        "Blithering Badgers",
-        "Courageous Californians",
-        "Devastating Donkeys",      
-    ];
-
-    let mut teams = Teams::new(
-        team_names.iter().map(|team_name| Team::new(team_name)).collect()
-    );
+    let mut teams = Teams::new();
 
     let table = "Team                           | MP |  W |  D |  L |  P".to_string();
 
@@ -46,8 +37,12 @@ pub fn tally(match_results: &str) -> String {
 struct Teams(Vec<Team>);
 
 impl Teams {
-    fn new(teams: Vec<Team>) -> Teams {
-        Teams(teams)
+    fn new() -> Teams {
+        Teams(vec![])
+    }
+
+    fn add_team(team_name: &str) {
+        
     }
 
     fn get_team(&mut self, team_name: &str) -> Option<&mut Team> {
