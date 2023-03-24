@@ -1,5 +1,5 @@
 use std::fmt;
-use std::collections::HashMap;
+use std::iter;
 
 pub fn tally(match_results: &str) -> String {
 
@@ -10,45 +10,81 @@ pub fn tally(match_results: &str) -> String {
         "Devastating Donkeys",      
     ];
 
-    let mut teams = HashMap::new();
+    let mut teams = Teams::new(
+        team_names.iter().map(|team_name| Team::new(team_name)).collect()
+    );
 
-    for team_name in team_names {
-        teams.insert(team_name, Team::new(team_name));
-    }
-
-    let mut table = vec![];
-    table.push("Team                           | MP |  W |  D |  L |  P");
+    let table = "Team                           | MP |  W |  D |  L |  P".to_string();
 
     for result_line in match_results.lines() {
-        let tokens: Vec<&str> = result_line.split(";").collect();
+        let tokens: Vec<&str> = result_line.split(';').collect();
         let (team1, team2, result) = (tokens[0], tokens[1], tokens[2]);
 
-        match result {
+         match result {
             "win" => {
-                teams.get_mut(team1).map(|val| val.add_win());
-                teams.get_mut(team2).map(|val| val.add_loss());
+                teams.get_team(team1).add_win();
+                teams.get_team(team2).add_loss();
             },
             "loss" => {
-                teams.get_mut(team1).map(|val| val.add_loss());
-                teams.get_mut(team2).map(|val| val.add_win());
+                teams.get_team(team1).add_loss();
+                teams.get_team(team2).add_win();
             },
             "draw" => {
-                teams.get_mut(team1).map(|val| val.add_draw());
-                teams.get_mut(team2).map(|val| val.add_draw());
+                teams.get_team(team1).add_draw();
+                teams.get_team(team2).add_draw();
             },
             &_ => (),
-        }
+         }
     }
-    "".to_string()
+
+    teams.sort();
+
+    format!("{}\n{}", table, teams)
 }
 
+#[derive(Debug)]
+struct Teams(Vec<Team>);
+
+impl Teams {
+    fn new(teams: Vec<Team>) -> Teams {
+        Teams(teams)
+    }
+
+    fn get_team(&mut self, team_name: &str) -> Option<&mut Team> {
+        self.0.iter_mut().find(|team| team.has_name(team_name))
+    }
+
+    fn sort(&mut self) {
+
+    }
+}
+
+impl iter::IntoIterator for Teams {
+    type Item = Team;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }    
+}
+
+impl fmt::Display for Teams {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for team in &self.0 {
+            writeln!(f, "{}", team)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 struct Team {
+    points: u32,
     name: String,
     played: u32,
     won: u32,
     drawn: u32,
     lost: u32,
-    points: u32,
 }
 
 impl Team {
@@ -83,6 +119,10 @@ impl Team {
         self.played += 1;
         self.lost += 1;
     }
+
+    fn has_name(&self, name: &str) -> bool {
+        name == self.name
+    }
 }
 
 
@@ -99,4 +139,22 @@ impl fmt::Display for Team {
             self.points,
         )
     }
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_results() {
+        let results = "Allegoric Alaskans;Blithering Badgers;win\n\
+            Devastating Donkeys;Courageous Californians;draw\n\
+            Devastating Donkeys;Allegoric Alaskans;win\n\
+            Courageous Californians;Blithering Badgers;loss\n\
+            Blithering Badgers;Devastating Donkeys;loss\n\
+            Allegoric Alaskans;Courageous Californians;win";
+        println!("{}", tally(results));
+    }
+
 }
