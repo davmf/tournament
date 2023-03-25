@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt;
 use std::iter;
 
@@ -9,32 +10,48 @@ pub fn tally(match_results: &str) -> String {
 
     for result_line in match_results.lines() {
         let tokens: Vec<&str> = result_line.split(';').collect();
-        let (team1, team2, result) = (tokens[0], tokens[1], tokens[2]);
+        let (team1_name, team2_name, result) = (tokens[0], tokens[1], tokens[2]);
 
-        if teams.get_team(team1).is_none() {
-            teams
+        // process team 1
+        let team = {
+            if let Some(team1) = teams.get_team(team1_name) {
+                team1
+            } else {
+                teams.new_team(Team::new(team1_name))
+            }
+        };
+
+        match result {
+            "win" => team.add_win(),
+            "loss" => team.add_loss(),
+            "draw" => team.add_draw(),
+            &_ => (),
         }
+        
+        // process team 2
+        let team = {
+            if let Some(team2) = teams.get_team(team2_name) {
+                team2
+            } else {
+                teams.new_team(Team::new(team2_name))
+            }
+        };
 
-         match result {
-            "win" => {
-                teams.get_team(team1).add_win();
-                teams.get_team(team2).add_loss();
-            },
-            "loss" => {
-                teams.get_team(team1).add_loss();
-                teams.get_team(team2).add_win();
-            },
-            "draw" => {
-                teams.get_team(team1).add_draw();
-                teams.get_team(team2).add_draw();
-            },
+        match result {
+            "win" => team.add_loss(),
+            "loss" => team.add_win(),
+            "draw" => team.add_draw(),
             &_ => (),
          }
     }
 
     teams.sort();
 
-    format!("{}\n{}", table, teams)
+    if teams.is_empty() {
+        table
+    } else {
+        format!("{}\n{}", table, teams)
+    }
 }
 
 #[derive(Debug)]
@@ -45,30 +62,21 @@ impl Teams {
         Teams(vec![])
     }
 
-    fn new_team(&mut self, team_name: &str) -> &mut Team {
-        &self.0.push(Team::new(team_name));
-        &mut self.0.last_mut().unwrap()
+    fn new_team(&mut self, team: Team) -> &mut Team {
+        self.0.push(team);
+        self.0.last_mut().unwrap()
     }
 
     fn get_team(&mut self, team_name: &str) -> Option<&mut Team> {
         self.0.iter_mut().find(|team| team.has_name(team_name))
     }
 
-    fn add_if_not_exists(&self, team_name: &str) -> &mut Team {
-        if let Some(team) = self.get_team(team_name) {
-            // Value already exists in the vector, return a mutable reference to it
-            &mut team
-        } else {
-            // Value does not exist in the vector, add it and return a mutable reference to it
-            self.new;
-            &mut v[v.len() - 1]
-        }
-    }
-  
-
-
     fn sort(&mut self) {
+        self.0.sort();
+    }
 
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }
 
@@ -83,14 +91,15 @@ impl iter::IntoIterator for Teams {
 
 impl fmt::Display for Teams {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for team in &self.0 {
+        for team in &self.0[..self.0.len()-1] {
             writeln!(f, "{}", team)?;
         }
+        write!(f, "{}", &self.0[self.0.len()-1])?;
         Ok(())
     }
 }
 
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Eq, PartialEq)]
 struct Team {
     points: u32,
     name: String,
@@ -110,10 +119,6 @@ impl Team {
             lost: 0,
             points: 0,
         }
-    }
-
-    fn points(&self) -> u32 {
-        self.won * 3 + self.drawn
     }
 
     fn add_win(&mut self) {
@@ -138,6 +143,21 @@ impl Team {
     }
 }
 
+impl PartialOrd for Team {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self.points.cmp(&other.points) {
+            Ordering::Less => Some(Ordering::Greater),
+            Ordering::Greater => Some(Ordering::Less),
+            Ordering::Equal => self.name.partial_cmp(&other.name),
+        }
+    }
+}
+
+impl Ord for Team {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap()
+    }
+}
 
 impl fmt::Display for Team {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
